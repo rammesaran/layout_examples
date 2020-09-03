@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 
 void main() {
@@ -9,6 +11,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
           leading: IconButton(
@@ -17,43 +20,102 @@ class MyApp extends StatelessWidget {
             tooltip: "TAP",
           ),
           title: Text('This is TITLE'),
-          actions: <Widget>[Icon(Icons.satellite), Icon(Icons.zoom_out_map)],
         ),
-        body: MyCustomWidget(),
+        body: ShoppingListCart(
+          products: [
+            Products(
+              name: "Egg",
+            ),
+            Products(
+              name: "podimas",
+            ),
+            Products(
+              name: "EEEE",
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class MyCustomWidget extends StatelessWidget {
+class Products {
+  final String name;
+  Products({this.name});
+}
+
+typedef void CartCallBack(Products products, bool cart);
+
+class ShoppinListItem extends StatelessWidget {
+  final Products products;
+  final bool incart;
+  final CartCallBack callBack;
+
+  ShoppinListItem({this.callBack, this.incart, this.products});
+
+  Color getColor(BuildContext context) {
+    return incart ? Colors.black : Theme.of(context).primaryColor;
+  }
+
+  TextStyle getTextStyle(BuildContext context) {
+    if (incart) return null;
+    return TextStyle(
+      color: Colors.black54,
+      decoration: TextDecoration.lineThrough,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    var deviceSize = MediaQuery.of(context).size;
-    return Center(
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.black26,
-        ),
-        height: deviceSize.height,
-        width: deviceSize.width,
-        //height: 500,
-
-        padding: EdgeInsets.all(10.0),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(child: Image.asset('assets/im.jpg')),
-              ],
-            ),
-            Row(
-              children: [
-                Expanded(child: Image.asset('assets/im.jpg')),
-              ],
-            ),
-          ],
-        ),
+    return ListTile(
+      onTap: () {
+        callBack(products, incart);
+      },
+      leading: CircleAvatar(
+        backgroundColor: getColor(context),
+        child: Text(products.name[0]),
       ),
+      title: Text(
+        products.name,
+        style: getTextStyle(context),
+      ),
+    );
+  }
+}
+
+class ShoppingListCart extends StatefulWidget {
+  final List<Products> products;
+  ShoppingListCart({Key key, this.products}) : super(key: key);
+  @override
+  _ShoppingListCartState createState() => _ShoppingListCartState();
+}
+
+class _ShoppingListCartState extends State<ShoppingListCart> {
+  Set<Products> shoppingcart = Set<Products>();
+
+  void handleChange(Products products, bool incart) {
+    setState(() {
+      if (!incart) {
+        shoppingcart.add(products);
+      } else {
+        shoppingcart.remove(products);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: EdgeInsets.symmetric(
+        vertical: 8.0,
+      ),
+      children: widget.products.map((Products p) {
+        return ShoppinListItem(
+          products: p,
+          incart: shoppingcart.contains(p),
+          callBack: handleChange,
+        );
+      }).toList(),
     );
   }
 }
